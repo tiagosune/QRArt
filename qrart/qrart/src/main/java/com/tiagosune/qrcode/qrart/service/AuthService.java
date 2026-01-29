@@ -36,4 +36,22 @@ public class AuthService {
 
         return response;
     }
+
+    public AuthResponse login(LoginRequest request) {
+
+        Users user = usersRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+
+        if (!user.getPassword().equals(request.getPassword())) {
+            throw new RuntimeException("Credenciais inválidas!");
+        }
+
+        AuthResponse response = new AuthResponse();
+        response.setName(user.getName());
+        response.setEmail(user.getEmail());
+        response.setToken("TEMPORARY_TOKEN");
+
+        return response;
+    }
+
 }
