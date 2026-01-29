@@ -5,6 +5,7 @@ import com.tiagosune.qrcode.qrart.dto.AuthResponse;
 import com.tiagosune.qrcode.qrart.dto.RegisterRequest;
 import com.tiagosune.qrcode.qrart.repository.UsersRepository;
 import com.tiagosune.qrcode.qrart.model.Users;
+import com.tiagosune.qrcode.qrart.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-
+    private final JwtService jwtService;
     private final UsersRepository usersRepository;
 
 
@@ -33,7 +34,7 @@ public class AuthService {
         AuthResponse response = new AuthResponse();
         response.setName(user.getName());
         response.setEmail(user.getEmail());
-        response.setToken("TEMPORARY_TOKEN");
+        response.setToken(jwtService.generateToken(user.getEmail()));
 
         return response;
     }
@@ -50,7 +51,7 @@ public class AuthService {
         AuthResponse response = new AuthResponse();
         response.setName(user.getName());
         response.setEmail(user.getEmail());
-        response.setToken("TEMPORARY_TOKEN");
+        response.setToken(jwtService.generateToken(user.getEmail()));
 
         return response;
     }
