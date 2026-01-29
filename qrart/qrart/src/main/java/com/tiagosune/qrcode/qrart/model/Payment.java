@@ -10,7 +10,7 @@ public class Payment {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne
-    private User user;
+    private Users users;
     @ManyToOne
     private QRCode qrcode;
 

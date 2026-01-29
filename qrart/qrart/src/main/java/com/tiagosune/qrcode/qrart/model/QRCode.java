@@ -14,6 +14,6 @@ public class QRCode {
     private boolean paid;
     private String imgPath;
     @ManyToOne
-    User user;
+    Users users;
 
 }
