@@ -1,5 +1,6 @@
 package com.tiagosune.qrcode.qrart.service;
 
+import com.tiagosune.qrcode.qrart.dto.LoginRequest;
 import com.tiagosune.qrcode.qrart.dto.AuthResponse;
 import com.tiagosune.qrcode.qrart.dto.RegisterRequest;
 import com.tiagosune.qrcode.qrart.repository.UsersRepository;
