@@ -1,6 +1,13 @@
 package com.tiagosune.qrcode.qrart.controller;
 
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/qrcode")
 public class QrCodeController {
+
 
 
 }
