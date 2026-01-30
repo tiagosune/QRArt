@@ -7,6 +7,7 @@ import com.tiagosune.qrcode.qrart.repository.UsersRepository;
 import com.tiagosune.qrcode.qrart.model.Users;
 import com.tiagosune.qrcode.qrart.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,11 +16,9 @@ public class AuthService {
 
     private final JwtService jwtService;
     private final UsersRepository usersRepository;
+    private final PasswordEncoder passwordEncoder;
 
 
-    /**
-     * Registers user; persists if email is unique
-     */
     public AuthResponse register(RegisterRequest request) {
         if (usersRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Usuário já existe!");
@@ -27,7 +26,7 @@ public class AuthService {
         Users user = new Users();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole("ROLE_USER");
         usersRepository.save(user);
 
@@ -44,7 +43,7 @@ public class AuthService {
         Users user = usersRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
 
-        if (!user.getPassword().equals(request.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Credenciais inválidas!");
         }
 
