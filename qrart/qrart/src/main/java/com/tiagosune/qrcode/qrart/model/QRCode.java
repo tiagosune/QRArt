@@ -10,10 +10,12 @@ public class QRCode {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String title;
     private String text;
     private boolean paid;
     private String imgPath;
-    @ManyToOne
-    Users users;
 
+    @ManyToOne
+    @JoinColumn(name = "users_id")
+    private Users user;
 }
