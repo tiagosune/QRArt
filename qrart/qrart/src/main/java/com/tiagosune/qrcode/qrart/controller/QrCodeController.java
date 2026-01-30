@@ -35,10 +35,11 @@ public class QrCodeController {
         response.setText(qr.getText());
         response.setPaid(qr.isPaid());
         response.setImgPath(qr.getImgPath());
+        response.setCreatedAt(qr.getCreatedAt());
         return response;
     }
 
-    @GetMapping("/list")
+    @GetMapping
     public List<QRCodeResponse> listForUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Users user = (Users) auth.getPrincipal();
@@ -56,8 +57,6 @@ public class QrCodeController {
             qrCodeResponse.setCreatedAt(qrCode.getCreatedAt());
             response.add(qrCodeResponse);
         }
-
         return response;
     }
-
 }
