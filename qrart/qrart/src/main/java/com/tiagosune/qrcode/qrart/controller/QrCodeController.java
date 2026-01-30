@@ -9,11 +9,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.tiagosune.qrcode.qrart.dto.CreateQRCodeRequest;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -23,7 +23,7 @@ public class QrCodeController {
     private final QRCodeService qrCodeService;
 
     @PostMapping("/create")
-    public QRCodeResponse createQRCodeForUser (@RequestBody @Valid CreateQRCodeRequest request){
+    public QRCodeResponse createQRCodeForUser(@RequestBody @Valid CreateQRCodeRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Users user = (Users) auth.getPrincipal();
         String title = request.getTitle();
@@ -35,6 +35,28 @@ public class QrCodeController {
         response.setText(qr.getText());
         response.setPaid(qr.isPaid());
         response.setImgPath(qr.getImgPath());
+        return response;
+    }
+
+    @GetMapping("/list")
+    public List<QRCodeResponse> listForUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Users user = (Users) auth.getPrincipal();
+
+        List<QRCode> qrs = qrCodeService.listForUser(user);
+
+        List<QRCodeResponse> response = new ArrayList<>();
+        for (QRCode qrCode : qrs) {
+            QRCodeResponse qrCodeResponse = new QRCodeResponse();
+            qrCodeResponse.setId(qrCode.getId());
+            qrCodeResponse.setTitle(qrCode.getTitle());
+            qrCodeResponse.setText(qrCode.getText());
+            qrCodeResponse.setPaid(qrCode.isPaid());
+            qrCodeResponse.setImgPath(qrCode.getImgPath());
+            qrCodeResponse.setCreatedAt(qrCode.getCreatedAt());
+            response.add(qrCodeResponse);
+        }
+
         return response;
     }
 

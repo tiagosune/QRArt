@@ -7,6 +7,8 @@ import com.tiagosune.qrcode.qrart.repository.QrCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class QRCodeService {
@@ -25,5 +27,9 @@ public class QRCodeService {
             return qrCodeRepository.save(newQRCode);
         }
         throw new RuntimeException("Usuário não pode ser nulo ao criar um QRCode");
+    }
+
+    public List<QRCode> listForUser(Users user) {
+        return qrCodeRepository.findAllByUser(user);
     }
 }
