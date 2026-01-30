@@ -5,6 +5,7 @@ import com.tiagosune.qrcode.qrart.dto.QRCodeResponse;
 import com.tiagosune.qrcode.qrart.model.QRCode;
 import com.tiagosune.qrcode.qrart.model.Users;
 import com.tiagosune.qrcode.qrart.service.QRCodeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,7 +23,7 @@ public class QrCodeController {
     private final QRCodeService qrCodeService;
 
     @PostMapping("/create")
-    public QRCodeResponse createQRCodeForUser (@RequestBody CreateQRCodeRequest request){
+    public QRCodeResponse createQRCodeForUser (@RequestBody @Valid CreateQRCodeRequest request){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Users user = (Users) auth.getPrincipal();
         String title = request.getTitle();
