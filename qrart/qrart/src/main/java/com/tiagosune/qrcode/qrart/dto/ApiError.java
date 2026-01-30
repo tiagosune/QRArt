@@ -9,7 +9,7 @@ import java.time.ZoneOffset;
 @Data
 public class ApiError {
 
-    private long timestamp = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+    private String timestamp;
     private int status;
     private String error;
     private String message;
