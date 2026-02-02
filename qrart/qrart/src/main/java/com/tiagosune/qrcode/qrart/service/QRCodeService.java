@@ -1,10 +1,10 @@
 package com.tiagosune.qrcode.qrart.service;
 
-
-import com.tiagosune.qrcode.qrart.model.QRCode;
 import com.tiagosune.qrcode.qrart.model.Users;
+import com.tiagosune.qrcode.qrart.model.QRCode;
 import com.tiagosune.qrcode.qrart.repository.QrCodeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.task.ThreadPoolTaskExecutorBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +14,7 @@ import java.util.List;
 public class QRCodeService {
 
     private final QrCodeRepository qrCodeRepository;
+    private final ThreadPoolTaskExecutorBuilder threadPoolTaskExecutorBuilder;
 
     public QRCode createForUser(Users user, String title, String text) {
         if (user != null) {
@@ -31,5 +32,12 @@ public class QRCodeService {
 
     public List<QRCode> listForUser(Users user) {
         return qrCodeRepository.findAllByUser(user);
+    }
+
+    public void deleteForUser(Long id, Users user) {
+        QRCode qrCode = qrCodeRepository
+                .findByIdAndUser(id, user)
+                .orElseThrow(() -> new RuntimeException("QR não encontrado para esse usuário"));
+        qrCodeRepository.delete(qrCode);
     }
 }

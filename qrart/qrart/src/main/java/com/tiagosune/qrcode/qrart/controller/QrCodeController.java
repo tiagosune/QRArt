@@ -59,4 +59,11 @@ public class QrCodeController {
         }
         return response;
     }
+
+    @DeleteMapping("/{id}")
+    public void deleteForUser(@PathVariable Long id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Users user = (Users) auth.getPrincipal();
+        qrCodeService.deleteForUser(id, user);
+    }
 }
