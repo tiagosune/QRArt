@@ -2,6 +2,7 @@ package com.tiagosune.qrcode.qrart.controller;
 
 
 import com.tiagosune.qrcode.qrart.dto.QRCodeResponse;
+import com.tiagosune.qrcode.qrart.dto.UpdateQRCodeRequest;
 import com.tiagosune.qrcode.qrart.model.QRCode;
 import com.tiagosune.qrcode.qrart.model.Users;
 import com.tiagosune.qrcode.qrart.service.QRCodeService;
@@ -65,5 +66,21 @@ public class QrCodeController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Users user = (Users) auth.getPrincipal();
         qrCodeService.deleteForUser(id, user);
+    }
+
+    @PutMapping("/{id}")
+    public QRCodeResponse updateForUser(@PathVariable Long id, @RequestBody @Valid UpdateQRCodeRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Users user = (Users) auth.getPrincipal();
+
+        QRCode qr = qrCodeService.updateForUser(id, user, request.getTitle(), request.getText());
+        QRCodeResponse response = new QRCodeResponse();
+        response.setId(qr.getId());
+        response.setTitle(qr.getTitle());
+        response.setText(qr.getText());
+        response.setPaid(qr.isPaid());
+        response.setImgPath(qr.getImgPath());
+        response.setCreatedAt(qr.getCreatedAt());
+        return response;
     }
 }

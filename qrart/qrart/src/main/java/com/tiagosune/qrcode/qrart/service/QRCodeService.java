@@ -1,5 +1,6 @@
 package com.tiagosune.qrcode.qrart.service;
 
+import com.tiagosune.qrcode.qrart.dto.QRCodeResponse;
 import com.tiagosune.qrcode.qrart.model.Users;
 import com.tiagosune.qrcode.qrart.model.QRCode;
 import com.tiagosune.qrcode.qrart.repository.QrCodeRepository;
@@ -39,5 +40,12 @@ public class QRCodeService {
                 .findByIdAndUser(id, user)
                 .orElseThrow(() -> new RuntimeException("QR não encontrado para esse usuário"));
         qrCodeRepository.delete(qrCode);
+    }
+
+    public QRCode updateForUser(Long id, Users user, String title, String text) {
+        QRCode qrCode = qrCodeRepository.findByIdAndUser(id, user).orElseThrow();
+        qrCode.setTitle(title.trim());
+        qrCode.setText(text.trim());
+        return qrCodeRepository.save(qrCode);
     }
 }
