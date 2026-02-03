@@ -49,4 +49,26 @@ public class QRCodeImageService {
         return combinedImage;
     }
 
+    private String saveImage(BufferedImage image, Long userId, Long qrCodeId) throws IOException {
+        String userDir = UPLOAD_DIR + userId + "/";
+        Path path = Paths.get(userDir);
+        Files.createDirectories(path);
+
+        String fileName = "qr_" + qrCodeId + ".png";
+        Path filePath = Paths.get(userDir + fileName);
+        ImageIO.write(image, "png", filePath.toFile());
+        return "/uploads/qrcodes/" + userId + "/" + fileName;
+    }
+
+    public String generateAndSave(Long qrCodeId,
+                                  Long userId,
+                                  String text,
+                                  MultipartFile logoFile)
+            throws IOException, WriterException {
+        BufferedImage qrCode = generateQRCode(text, QR_CODE_SIZE, QR_CODE_SIZE);
+        BufferedImage logo = logoFile.isEmpty() ? null : resizeLogo(ImageIO.read(logoFile.getInputStream()), LOGO_SIZE);
+        BufferedImage combinedImage = logo == null ? qrCode : overlayLogo(qrCode, logo);
+        return saveImage(combinedImage, userId, qrCodeId);
+    }
+
 }
