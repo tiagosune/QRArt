@@ -1,6 +1,8 @@
 package com.tiagosune.qrcode.qrart.service;
 
 
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import org.springframework.stereotype.Service;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -17,6 +19,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class QRCodeImageService {
@@ -27,9 +31,23 @@ public class QRCodeImageService {
 
     private BufferedImage generateQRCode(String text, int width, int height) throws WriterException {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
+
+        // configuração para deixar a correção de erro no maximo
+        Map<EncodeHintType, Object> hints = new HashMap<>();
+        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
+        hints.put(EncodeHintType.MARGIN, 1);
+
+        BitMatrix bitMatrix = qrCodeWriter.encode(
+                text,
+                BarcodeFormat.QR_CODE,
+                width,
+                height,
+                hints
+        );
+
         return MatrixToImageWriter.toBufferedImage(bitMatrix);
     }
+
 
     private BufferedImage resizeLogo(BufferedImage originalLogo, int targetSize) {
         Image tmp = originalLogo.getScaledInstance(targetSize, targetSize, Image.SCALE_SMOOTH);
@@ -41,13 +59,37 @@ public class QRCodeImageService {
     }
 
     private BufferedImage overlayLogo(BufferedImage qrCode, BufferedImage logo) {
-        BufferedImage combinedImage = new BufferedImage(qrCode.getWidth(), qrCode.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        BufferedImage combinedImage = new BufferedImage(
+                qrCode.getWidth(),
+                qrCode.getHeight(),
+                BufferedImage.TYPE_INT_ARGB
+        );
+
         Graphics2D g2d = combinedImage.createGraphics();
+
         g2d.drawImage(qrCode, 0, 0, null);
-        g2d.drawImage(logo, (qrCode.getWidth() - logo.getWidth()) / 2, (qrCode.getHeight() - logo.getHeight()) / 2, null);
+
+        int x = (qrCode.getWidth() - logo.getWidth()) / 2;
+        int y = (qrCode.getHeight() - logo.getHeight()) / 2;
+
+        // adicionar borda branca ao redor da logo para ficar mais legivel
+        int borderSize = 10;
+        g2d.setColor(Color.WHITE);
+        g2d.fillRoundRect(
+                x - borderSize,
+                y - borderSize,
+                logo.getWidth() + (borderSize * 2),
+                logo.getHeight() + (borderSize * 2),
+                20, // deixar os cantos arredondados
+                20
+        );
+
+        g2d.drawImage(logo, x, y, null);
+
         g2d.dispose();
         return combinedImage;
     }
+
 
     private String saveImage(BufferedImage image, Long userId, Long qrCodeId) throws IOException {
         String userDir = UPLOAD_DIR + userId + "/";
@@ -65,10 +107,31 @@ public class QRCodeImageService {
                                   String text,
                                   MultipartFile logoFile)
             throws IOException, WriterException {
+
+        if (logoFile != null && !logoFile.isEmpty()) {
+            String contentType = logoFile.getContentType();
+            if (contentType == null || !contentType.matches("image/(png|jpeg|jpg)")) {
+                throw new IOException("Apenas imagens PNG ou JPG são permitidas");
+            }
+
+            long maxSize = 5 * 1024 * 1024; // 5MB
+            if (logoFile.getSize() > maxSize) {
+                throw new IOException("Imagem muito grande. Tamanho máximo: 5MB");
+            }
+
+            String originalFilename = logoFile.getOriginalFilename();
+            if (originalFilename == null || originalFilename.contains("..")) {
+                throw new IOException("Nome de arquivo inválido");
+            }
+        }
+
         BufferedImage qrCode = generateQRCode(text, QR_CODE_SIZE, QR_CODE_SIZE);
-        BufferedImage logo = logoFile.isEmpty() ? null : resizeLogo(ImageIO.read(logoFile.getInputStream()), LOGO_SIZE);
+        BufferedImage logo = logoFile == null || logoFile.isEmpty()
+                ? null
+                : resizeLogo(ImageIO.read(logoFile.getInputStream()), LOGO_SIZE);
         BufferedImage combinedImage = logo == null ? qrCode : overlayLogo(qrCode, logo);
         return saveImage(combinedImage, userId, qrCodeId);
     }
+
 
 }

@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import com.tiagosune.qrcode.qrart.dto.CreateQRCodeRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,12 +25,21 @@ public class QrCodeController {
     private final QRCodeService qrCodeService;
 
     @PostMapping("/create")
-    public QRCodeResponse createQRCodeForUser(@RequestBody @Valid CreateQRCodeRequest request) {
+    public QRCodeResponse createQRCodeForUser(@RequestParam("title") String title,
+                                              @RequestParam("text") String text,
+                                              @RequestParam(value = "logoFile", required = false) MultipartFile logoFile) {
+
+        if(title == null || title.isBlank()) {
+            throw new RuntimeException("Titulo não pode ser vazio");
+        }
+        if(text == null || text.isBlank()) {
+            throw new RuntimeException("Texto não pode ser vazio");
+        }
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Users user = (Users) auth.getPrincipal();
-        String title = request.getTitle();
-        String text = request.getText();
-        QRCode qr = qrCodeService.createForUser(user, title, text);
+
+        QRCode qr = qrCodeService.createForUser(user, title, text, logoFile);
         return toResponse(qr);
     }
 

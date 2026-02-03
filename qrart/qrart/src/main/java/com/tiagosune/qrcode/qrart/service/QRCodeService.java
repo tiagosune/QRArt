@@ -1,14 +1,15 @@
 package com.tiagosune.qrcode.qrart.service;
 
-import com.tiagosune.qrcode.qrart.dto.QRCodeResponse;
+import com.google.zxing.WriterException;
 import com.tiagosune.qrcode.qrart.exception.QrNotFoundException;
 import com.tiagosune.qrcode.qrart.model.Users;
 import com.tiagosune.qrcode.qrart.model.QRCode;
 import com.tiagosune.qrcode.qrart.repository.QrCodeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.task.ThreadPoolTaskExecutorBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -16,20 +17,33 @@ import java.util.List;
 public class QRCodeService {
 
     private final QrCodeRepository qrCodeRepository;
-    private final ThreadPoolTaskExecutorBuilder threadPoolTaskExecutorBuilder;
+    private final QRCodeImageService qrCodeImageService;
 
-    public QRCode createForUser(Users user, String title, String text) {
-        if (user != null) {
-            QRCode newQRCode = new QRCode();
-            newQRCode.setTitle(title.trim());
-            newQRCode.setText(text.trim());
-            newQRCode.setUser(user);
-            newQRCode.setPaid(false);
-            newQRCode.setImgPath(null);
-            newQRCode.setCreatedAt(java.time.LocalDateTime.now());
-            return qrCodeRepository.save(newQRCode);
+    public QRCode createForUser(Users user, String title, String text, MultipartFile file) {
+        if (user == null) {
+            throw new RuntimeException("Usuário não pode ser nulo ao criar um QRCode");
         }
-        throw new RuntimeException("Usuário não pode ser nulo ao criar um QRCode");
+
+        QRCode newQRCode = new QRCode();
+        newQRCode.setTitle(title.trim());
+        newQRCode.setText(text.trim());
+        newQRCode.setUser(user);
+        newQRCode.setPaid(false);
+        newQRCode.setCreatedAt(java.time.LocalDateTime.now());
+        newQRCode = qrCodeRepository.save(newQRCode);
+
+        try {
+            String imgPath = qrCodeImageService.generateAndSave(newQRCode.getId(),
+                    newQRCode.getUser().getId(),
+                    newQRCode.getText(),
+                    file);
+
+            newQRCode.setImgPath(imgPath);
+            return qrCodeRepository.save(newQRCode);
+        } catch (IOException | WriterException e) {
+            qrCodeRepository.delete(newQRCode);
+            throw new RuntimeException("Erro ao gerar imagem do QR Code: " + e.getMessage());
+        }
     }
 
     public List<QRCode> listForUser(Users user) {
