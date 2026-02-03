@@ -30,14 +30,7 @@ public class QrCodeController {
         String title = request.getTitle();
         String text = request.getText();
         QRCode qr = qrCodeService.createForUser(user, title, text);
-        QRCodeResponse response = new QRCodeResponse();
-        response.setId(qr.getId());
-        response.setTitle(qr.getTitle());
-        response.setText(qr.getText());
-        response.setPaid(qr.isPaid());
-        response.setImgPath(qr.getImgPath());
-        response.setCreatedAt(qr.getCreatedAt());
-        return response;
+        return toResponse(qr);
     }
 
     @GetMapping
@@ -49,14 +42,8 @@ public class QrCodeController {
 
         List<QRCodeResponse> response = new ArrayList<>();
         for (QRCode qrCode : qrs) {
-            QRCodeResponse qrCodeResponse = new QRCodeResponse();
-            qrCodeResponse.setId(qrCode.getId());
-            qrCodeResponse.setTitle(qrCode.getTitle());
-            qrCodeResponse.setText(qrCode.getText());
-            qrCodeResponse.setPaid(qrCode.isPaid());
-            qrCodeResponse.setImgPath(qrCode.getImgPath());
-            qrCodeResponse.setCreatedAt(qrCode.getCreatedAt());
-            response.add(qrCodeResponse);
+            QRCodeResponse tempObject = toResponse(qrCode);
+            response.add(tempObject);
         }
         return response;
     }
@@ -74,6 +61,11 @@ public class QrCodeController {
         Users user = (Users) auth.getPrincipal();
 
         QRCode qr = qrCodeService.updateForUser(id, user, request.getTitle(), request.getText());
+        return toResponse(qr);
+    }
+
+
+    private QRCodeResponse toResponse(QRCode qr) {
         QRCodeResponse response = new QRCodeResponse();
         response.setId(qr.getId());
         response.setTitle(qr.getTitle());
