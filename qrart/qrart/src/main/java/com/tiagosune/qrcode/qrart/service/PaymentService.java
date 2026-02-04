@@ -45,8 +45,8 @@ public class PaymentService implements InitializingBean {
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:3000/success?qrCodeId=" + qrCodeId)
-                .setCancelUrl("http://localhost:3000/cancel")
+                .setSuccessUrl("http://localhost:5173/success?qrCodeId=" + qrCodeId)
+                .setCancelUrl("http://localhost:5173/cancel")
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setPriceData(
