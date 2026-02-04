@@ -57,7 +57,7 @@ public class PaymentService implements InitializingBean {
                                                 .setUnitAmount(PRICE_AMOUNT)
                                                 .setProductData(
                                                         SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                                                .setName("QR Code Premium - " + qrCode.getTitle())
+                                                                .setName("QR Code Custom - " + qrCode.getTitle())
                                                                 .setDescription("QR Code personalizado")
                                                                 .build()
                                                 )
@@ -72,13 +72,12 @@ public class PaymentService implements InitializingBean {
 
         Session session = Session.create(params);
 
-        // 🔥 CORRIGIDO: Adiciona user e qrCode
         Payment payment = Payment.builder()
                 .amount(BigDecimal.valueOf(5.00))
                 .stripeSessionId(session.getId())
                 .status("PENDING")
-                .user(user)           // 🔥 ADICIONA USER
-                .qrCode(qrCode)       // 🔥 ADICIONA QRCODE
+                .user(user)
+                .qrCode(qrCode)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -98,16 +97,14 @@ public class PaymentService implements InitializingBean {
 
         payment.setStatus("COMPLETED");
 
-        // 🔥 MARCA O QR CODE COMO PAGO
         QRCode qrCode = payment.getQrCode();
         if (qrCode != null) {
             qrCode.setPaid(true);
             qrCodeRepository.save(qrCode);
-            log.info("✅ QR Code #{} marcado como pago!", qrCode.getId());
         }
 
         paymentRepository.save(payment);
-        log.info("✅ Pagamento confirmado: sessionId={}", sessionId);
+        log.info(" pagamento confirmado: sessionId={}", sessionId);
     }
 
 
