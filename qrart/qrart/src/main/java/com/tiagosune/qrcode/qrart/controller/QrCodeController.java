@@ -73,6 +73,16 @@ public class QrCodeController {
         return toResponse(qr);
     }
 
+    @GetMapping("/{id}")
+    public QRCodeResponse getById(@PathVariable Long id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Users user = (Users) auth.getPrincipal();
+
+        QRCode qr = qrCodeService.getByIdAndUser(id, user);
+        return toResponse(qr);
+    }
+
+
 
     private QRCodeResponse toResponse(QRCode qr) {
         QRCodeResponse response = new QRCodeResponse();

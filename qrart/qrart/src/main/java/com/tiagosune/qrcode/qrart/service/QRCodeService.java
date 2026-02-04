@@ -65,4 +65,10 @@ public class QRCodeService {
         qrCode.setText(text.trim());
         return qrCodeRepository.save(qrCode);
     }
+
+    public QRCode getByIdAndUser(Long id, Users user) {
+        return qrCodeRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new RuntimeException("QR Code não encontrado"));
+    }
+
 }
