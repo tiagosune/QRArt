@@ -26,6 +26,7 @@ public class UsersController {
         response.setId(user.getId());
         response.setName(user.getName());
         response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
 
         return response;
     }

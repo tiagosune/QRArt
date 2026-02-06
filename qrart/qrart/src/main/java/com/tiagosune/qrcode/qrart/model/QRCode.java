@@ -15,6 +15,7 @@ public class QRCode {
     private String title;
     private String text;
     private boolean paid;
+    private boolean deleted = false;
     private String imgPath;
     private LocalDateTime createdAt;
 
