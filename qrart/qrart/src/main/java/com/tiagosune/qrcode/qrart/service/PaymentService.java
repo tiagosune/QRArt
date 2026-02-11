@@ -73,7 +73,7 @@ public class PaymentService implements InitializingBean {
         Session session = Session.create(params);
 
         Payment payment = Payment.builder()
-                .amount(BigDecimal.valueOf(5.00))
+                .amount(BigDecimal.valueOf(3.00))
                 .stripeSessionId(session.getId())
                 .status("PENDING")
                 .user(user)
@@ -89,24 +89,28 @@ public class PaymentService implements InitializingBean {
     }
 
 
+    @Transactional
     public void confirmPayment(String sessionId) {
-        log.info("🔍 Buscando pagamento com sessionId: {}", sessionId);
 
         Payment payment = paymentRepository.findByStripeSessionId(sessionId)
-                .orElseThrow(() -> new RuntimeException("Pagamento não encontrado"));
+                .orElse(null);
+
+        if (payment == null) {
+            return;
+        }
+
+        if ("COMPLETED".equals(payment.getStatus())) {
+            return;
+        }
 
         payment.setStatus("COMPLETED");
 
         QRCode qrCode = payment.getQrCode();
-        if (qrCode != null) {
+        if (qrCode != null && !qrCode.isPaid()) {
             qrCode.setPaid(true);
             qrCodeRepository.save(qrCode);
         }
 
         paymentRepository.save(payment);
-        log.info(" pagamento confirmado: sessionId={}", sessionId);
     }
-
-
-
 }

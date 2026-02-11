@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { authService } from "../services/authService";
+import api from "../services/api";
 
 const AuthContext = createContext();
 
@@ -9,31 +9,52 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        const userName = localStorage.getItem("userName");
 
-        if (token && userName) {
-            setUser({ name: userName });
-        } else {
+        if (!token) {
             setUser(null);
+            setLoading(false);
+            return;
         }
 
-        setLoading(false);
+        // 🔥 busca o usuário real no backend
+        api.get("/users/me")
+            .then(res => {
+                setUser(res.data); // { id, name, email, role }
+            })
+            .catch(() => {
+                localStorage.removeItem("token");
+                setUser(null);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
     }, []);
 
     const login = (userData) => {
         localStorage.setItem("token", userData.token);
-        localStorage.setItem("userName", userData.name);
-        setUser({ name: userData.name });
+
+        // 🔥 após login, busca /me
+        api.get("/users/me").then(res => {
+            setUser(res.data);
+        });
     };
 
     const logout = () => {
-        authService.logout();
-        localStorage.removeItem("userName");
+        localStorage.removeItem("token");
         setUser(null);
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider
+            value={{
+                user,
+                isAuthenticated: !!user,
+                isAdmin: user?.role === "ROLE_ADMIN",
+                login,
+                logout,
+                loading
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );
