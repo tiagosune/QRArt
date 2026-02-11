@@ -27,10 +27,11 @@ public class PaymentService implements InitializingBean {
 
     private final QrCodeRepository qrCodeRepository;
     private final PaymentRepository paymentRepository;
-
     @Value("${stripe.api.key}")
     private String stripeApiKey;
+
     private static final long PRICE_AMOUNT = 500L; // R$ 5,00 em centavos
+
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -82,8 +83,6 @@ public class PaymentService implements InitializingBean {
                 .build();
 
         paymentRepository.save(payment);
-
-        log.info("Checkout criado: sessionId={}, qrCodeId={}", session.getId(), qrCodeId);
 
         return session.getUrl();
     }

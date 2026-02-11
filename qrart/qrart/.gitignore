@@ -33,3 +33,7 @@ build/
 .vscode/
 
 src/main/resources/static/uploads/qrcodes
+application.properties
+application-*.properties
+.env
+*.env

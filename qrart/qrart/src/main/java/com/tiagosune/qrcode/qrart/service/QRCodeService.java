@@ -31,7 +31,7 @@ public class QRCodeService {
 
         QRCode qrCode = new QRCode();
         qrCode.setTitle(title.trim());
-        qrCode.setText(text.trim()); // aqui fica o link real
+        qrCode.setText(text.trim());
         qrCode.setUser(user);
 
         qrCode.setPaid("ROLE_ADMIN".equals(user.getRole()));
