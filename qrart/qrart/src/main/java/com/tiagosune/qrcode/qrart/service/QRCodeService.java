@@ -6,6 +6,7 @@ import com.tiagosune.qrcode.qrart.model.QRCode;
 import com.tiagosune.qrcode.qrart.model.Users;
 import com.tiagosune.qrcode.qrart.repository.QrCodeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +21,9 @@ public class QRCodeService {
     private final QrCodeRepository qrCodeRepository;
     private final QRCodeImageService qrCodeImageService;
 
+    @Value("${app.base-url}")
+    private String baseUrl;
+
     public QRCode createForUser(Users user, String title, String text, MultipartFile file) {
         if (user == null) {
             throw new RuntimeException("Usuário não pode ser nulo");
@@ -27,20 +31,21 @@ public class QRCodeService {
 
         QRCode qrCode = new QRCode();
         qrCode.setTitle(title.trim());
-        qrCode.setText(text.trim());
+        qrCode.setText(text.trim()); // aqui fica o link real
         qrCode.setUser(user);
 
         qrCode.setPaid("ROLE_ADMIN".equals(user.getRole()));
-
         qrCode.setCreatedAt(LocalDateTime.now());
 
         qrCode = qrCodeRepository.save(qrCode);
 
         try {
+            String dynamicUrl = baseUrl + "/r/" + qrCode.getId();
+
             String imgPath = qrCodeImageService.generateAndSave(
                     qrCode.getId(),
                     user.getId(),
-                    qrCode.getText(),
+                    dynamicUrl,
                     file
             );
 
