@@ -12,6 +12,7 @@ import com.tiagosune.qrcode.qrart.repository.QrCodeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,9 @@ public class PaymentService implements InitializingBean {
     private final QrCodeRepository qrCodeRepository;
     private final PaymentRepository paymentRepository;
 
-    private static final String STRIPE_SECRET_KEY = "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";
+    @Value("${stripe.api.key}")
+    private String STRIPE_SECRET_KEY;
+
     private static final long PRICE_AMOUNT = 300L; // 3 reais em centavos
 
     @Override
