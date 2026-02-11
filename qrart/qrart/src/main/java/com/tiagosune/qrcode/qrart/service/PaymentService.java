@@ -12,7 +12,6 @@ import com.tiagosune.qrcode.qrart.repository.QrCodeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,19 +26,17 @@ public class PaymentService implements InitializingBean {
 
     private final QrCodeRepository qrCodeRepository;
     private final PaymentRepository paymentRepository;
-    @Value("${stripe.api.key}")
-    private String stripeApiKey;
 
-    private static final long PRICE_AMOUNT = 500L; // R$ 5,00 em centavos
-
+    private static final String STRIPE_SECRET_KEY = "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";
+    private static final long PRICE_AMOUNT = 300L; // 3 reais em centavos
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        Stripe.apiKey = stripeApiKey;
+        Stripe.apiKey = STRIPE_SECRET_KEY;
     }
 
     public String createCheckoutSession(Long qrCodeId, Users user) throws StripeException {
-        QRCode qrCode = qrCodeRepository.findByIdAndUser(qrCodeId, user)
+        QRCode qrCode = qrCodeRepository.findByIdAndUserAndDeletedFalse(qrCodeId, user)
                 .orElseThrow(() -> new RuntimeException("QR Code não encontrado"));
 
         if (qrCode.isPaid()) {
