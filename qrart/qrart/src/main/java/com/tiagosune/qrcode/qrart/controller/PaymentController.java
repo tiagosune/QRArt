@@ -1,12 +1,15 @@
 package com.tiagosune.qrcode.qrart.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.model.Event;
+import com.stripe.model.checkout.Session;
+import com.stripe.net.Webhook;
 import com.stripe.exception.StripeException;
 import com.tiagosune.qrcode.qrart.model.Users;
 import com.tiagosune.qrcode.qrart.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +24,9 @@ import java.util.Map;
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${stripe.webhook.secret}")
+    private String stripeWebhookSecret;
 
     @PostMapping("/create-checkout")
     public ResponseEntity<Map<String, String>> createCheckout(
@@ -44,24 +49,41 @@ public class PaymentController {
     }
 
     @PostMapping("/webhook")
-    public ResponseEntity<String> stripeWebhook(@RequestBody String payload) {
+    public ResponseEntity<String> stripeWebhook(
+            @RequestBody String payload,
+            @RequestHeader("Stripe-Signature") String sigHeader
+    ) {
+
         try {
-            // Parseia o JSON com Jackson
-            JsonNode eventJson = objectMapper.readTree(payload);
-            String eventType = eventJson.get("type").asText();
 
-            if ("checkout.session.completed".equals(eventType)) {
-                String sessionId = eventJson.get("data").get("object").get("id").asText();
+            Event event = Webhook.constructEvent(
+                    payload,
+                    sigHeader,
+                    stripeWebhookSecret
+            );
 
-                paymentService.confirmPayment(sessionId);
+            log.info("📥 Evento recebido: {}", event.getType());
 
-                return ResponseEntity.ok("Pagamento confirmado com sucesso!");
+            if ("checkout.session.completed".equals(event.getType())) {
+
+                Session session = (Session) event.getDataObjectDeserializer()
+                        .getObject()
+                        .orElse(null);
+
+                if (session != null) {
+                    paymentService.confirmPayment(session.getId());
+                }
             }
 
-            return ResponseEntity.ok("Evento processado: " + eventType);
+            return ResponseEntity.ok("Webhook processado com sucesso");
+
+        } catch (SignatureVerificationException e) {
+            log.error("❌ Assinatura inválida do Stripe", e);
+            return ResponseEntity.status(400).body("Invalid signature");
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
+            log.error("❌ Erro ao processar webhook", e);
+            return ResponseEntity.status(500).body("Erro interno");
         }
     }
 }
