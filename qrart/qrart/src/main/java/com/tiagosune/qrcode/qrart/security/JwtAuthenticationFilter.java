@@ -9,13 +9,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,30 +27,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UsersRepository usersRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
-
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
         try {
-            if ("OPTIONS".equals(request.getMethod())) {
-                log.info("Liberando requisição OPTIONS");
+            // Libera OPTIONS (CORS)
+            if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
             String path = request.getRequestURI();
-            if (path.startsWith("/api/auth/") ||
-                    path.startsWith("/api/webhook/") ||
-                    path.startsWith("/api/payments/webhook") ||
-                    path.startsWith("/uploads/")) {
-                log.info("rota publica, pulando JWT");
+            if (path.startsWith("/api/auth/")
+                    || path.startsWith("/api/webhook/")
+                    || path.startsWith("/api/payments/webhook")
+                    || path.startsWith("/uploads/")) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
             String authorization = request.getHeader("Authorization");
-            log.info("Authorization header: {}", authorization);
 
             if (authorization == null || !authorization.startsWith("Bearer ")) {
                 filterChain.doFilter(request, response);
@@ -60,26 +60,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String email = jwtService.extractUsername(token);
 
-            if (email != null) {
-                var userOptional = usersRepository.findByEmail(email);
-                if (userOptional.isPresent()) {
-                    Users user = userOptional.get();
-                    boolean isValid = jwtService.isTokenValid(token, email);
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                    if (isValid && SecurityContextHolder.getContext().getAuthentication() == null) {
-                        UsernamePasswordAuthenticationToken authenticationToken =
-                                new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
-                        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                    }
-                } else {
+                Users user = usersRepository.findByEmail(email)
+                        .orElse(null);
+
+                if (user != null && jwtService.isTokenValid(token, email)) {
+
+                    String role = jwtService.extractRole(token);
+
+                    SimpleGrantedAuthority authority =
+                            new SimpleGrantedAuthority(role);
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    user,
+                                    null,
+                                    List.of(authority)
+                            );
+
+                    authentication.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
 
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            log.error("erro no filtro jwt: ", e);
+            log.error("Erro no filtro JWT", e);
             filterChain.doFilter(request, response);
         }
     }

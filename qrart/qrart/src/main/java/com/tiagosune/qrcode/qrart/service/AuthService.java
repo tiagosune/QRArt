@@ -33,7 +33,7 @@ public class AuthService {
         AuthResponse response = new AuthResponse();
         response.setName(user.getName());
         response.setEmail(user.getEmail());
-        response.setToken(jwtService.generateToken(user.getEmail()));
+        response.setToken(jwtService.generateToken(user.getEmail(), user.getRole()));
 
         return response;
     }
@@ -50,7 +50,7 @@ public class AuthService {
         AuthResponse response = new AuthResponse();
         response.setName(user.getName());
         response.setEmail(user.getEmail());
-        response.setToken(jwtService.generateToken(user.getEmail()));
+        response.setToken(jwtService.generateToken(user.getEmail(), user.getRole()));
 
         return response;
     }

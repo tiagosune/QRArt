@@ -28,7 +28,7 @@ public class PaymentService implements InitializingBean {
     private final PaymentRepository paymentRepository;
 
     private static final String STRIPE_SECRET_KEY = "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";
-    private static final long PRICE_AMOUNT = 500L; // R$ 5,00 em centavos
+    private static final long PRICE_AMOUNT = 300L; // 3 reais em centavos
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -36,7 +36,7 @@ public class PaymentService implements InitializingBean {
     }
 
     public String createCheckoutSession(Long qrCodeId, Users user) throws StripeException {
-        QRCode qrCode = qrCodeRepository.findByIdAndUser(qrCodeId, user)
+        QRCode qrCode = qrCodeRepository.findByIdAndUserAndDeletedFalse(qrCodeId, user)
                 .orElseThrow(() -> new RuntimeException("QR Code não encontrado"));
 
         if (qrCode.isPaid()) {

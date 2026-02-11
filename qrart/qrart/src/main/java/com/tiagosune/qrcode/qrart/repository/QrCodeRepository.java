@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface QrCodeRepository extends JpaRepository<QRCode, Long> {
 
-    List<QRCode> findAllByUser(Users user);
-    Optional<QRCode> findByIdAndUser(Long id, Users user);
+    List<QRCode> findAllByUserAndDeletedFalse(Users user);
+    Optional<QRCode> findByIdAndUserAndDeletedFalse(Long id, Users user);
 
 }

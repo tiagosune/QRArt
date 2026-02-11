@@ -2,14 +2,15 @@ package com.tiagosune.qrcode.qrart.service;
 
 import com.google.zxing.WriterException;
 import com.tiagosune.qrcode.qrart.exception.QrNotFoundException;
-import com.tiagosune.qrcode.qrart.model.Users;
 import com.tiagosune.qrcode.qrart.model.QRCode;
+import com.tiagosune.qrcode.qrart.model.Users;
 import com.tiagosune.qrcode.qrart.repository.QrCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,54 +22,57 @@ public class QRCodeService {
 
     public QRCode createForUser(Users user, String title, String text, MultipartFile file) {
         if (user == null) {
-            throw new RuntimeException("Usuário não pode ser nulo ao criar um QRCode");
+            throw new RuntimeException("Usuário não pode ser nulo");
         }
 
-        QRCode newQRCode = new QRCode();
-        newQRCode.setTitle(title.trim());
-        newQRCode.setText(text.trim());
-        newQRCode.setUser(user);
-        newQRCode.setPaid(false);
-        newQRCode.setCreatedAt(java.time.LocalDateTime.now());
-        newQRCode = qrCodeRepository.save(newQRCode);
+        QRCode qrCode = new QRCode();
+        qrCode.setTitle(title.trim());
+        qrCode.setText(text.trim());
+        qrCode.setUser(user);
+
+        qrCode.setPaid("ROLE_ADMIN".equals(user.getRole()));
+
+        qrCode.setCreatedAt(LocalDateTime.now());
+
+        qrCode = qrCodeRepository.save(qrCode);
 
         try {
-            String imgPath = qrCodeImageService.generateAndSave(newQRCode.getId(),
-                    newQRCode.getUser().getId(),
-                    newQRCode.getText(),
-                    file);
+            String imgPath = qrCodeImageService.generateAndSave(
+                    qrCode.getId(),
+                    user.getId(),
+                    qrCode.getText(),
+                    file
+            );
 
-            newQRCode.setImgPath(imgPath);
-            return qrCodeRepository.save(newQRCode);
+            qrCode.setImgPath(imgPath);
+            return qrCodeRepository.save(qrCode);
+
         } catch (IOException | WriterException e) {
-            qrCodeRepository.delete(newQRCode);
-            throw new RuntimeException("Erro ao gerar imagem do QR Code: " + e.getMessage());
+            qrCodeRepository.delete(qrCode);
+            throw new RuntimeException("Erro ao gerar QR Code");
         }
     }
 
     public List<QRCode> listForUser(Users user) {
-        return qrCodeRepository.findAllByUser(user);
+        return qrCodeRepository.findAllByUserAndDeletedFalse(user);
     }
 
-    public void deleteForUser(Long id, Users user) {
-        QRCode qrCode = qrCodeRepository
-                .findByIdAndUser(id, user)
-                .orElseThrow(() -> new QrNotFoundException("QR não encontrado para esse usuário"));
-        qrCodeRepository.delete(qrCode);
+    public QRCode getByIdAndUser(Long id, Users user) {
+        return qrCodeRepository
+                .findByIdAndUserAndDeletedFalse(id, user)
+                .orElseThrow(() -> new QrNotFoundException("QR Code não encontrado"));
     }
 
     public QRCode updateForUser(Long id, Users user, String title, String text) {
-        QRCode qrCode = qrCodeRepository
-                .findByIdAndUser(id, user)
-                .orElseThrow(() -> new QrNotFoundException("QR não encontrado para esse usuário"));
+        QRCode qrCode = getByIdAndUser(id, user);
         qrCode.setTitle(title.trim());
         qrCode.setText(text.trim());
         return qrCodeRepository.save(qrCode);
     }
 
-    public QRCode getByIdAndUser(Long id, Users user) {
-        return qrCodeRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new RuntimeException("QR Code não encontrado"));
+    public void deleteForUser(Long id, Users user) {
+        QRCode qrCode = getByIdAndUser(id, user);
+        qrCode.setDeleted(true);
+        qrCodeRepository.save(qrCode);
     }
-
 }
