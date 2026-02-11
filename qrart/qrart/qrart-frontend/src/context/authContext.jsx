@@ -16,10 +16,9 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
-        // 🔥 busca o usuário real no backend
         api.get("/users/me")
             .then(res => {
-                setUser(res.data); // { id, name, email, role }
+                setUser(res.data);
             })
             .catch(() => {
                 localStorage.removeItem("token");
@@ -30,13 +29,11 @@ export const AuthProvider = ({ children }) => {
             });
     }, []);
 
-    const login = (userData) => {
+    const login = async (userData) => {
         localStorage.setItem("token", userData.token);
 
-        // 🔥 após login, busca /me
-        api.get("/users/me").then(res => {
-            setUser(res.data);
-        });
+        const res = await api.get("/users/me");
+        setUser(res.data);
     };
 
     const logout = () => {
