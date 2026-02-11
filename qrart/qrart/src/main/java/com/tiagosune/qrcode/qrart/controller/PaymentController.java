@@ -46,20 +46,13 @@ public class PaymentController {
     @PostMapping("/webhook")
     public ResponseEntity<String> stripeWebhook(@RequestBody String payload) {
         try {
-            log.info("📥 Webhook recebido: {}", payload);
-
             // Parseia o JSON com Jackson
             JsonNode eventJson = objectMapper.readTree(payload);
             String eventType = eventJson.get("type").asText();
 
-            log.info("🔍 Tipo do evento: {}", eventType);
-
             if ("checkout.session.completed".equals(eventType)) {
-                // Extrai o session ID
                 String sessionId = eventJson.get("data").get("object").get("id").asText();
-                log.info("🔑 Session ID extraído: {}", sessionId);
 
-                // Confirma o pagamento
                 paymentService.confirmPayment(sessionId);
 
                 return ResponseEntity.ok("Pagamento confirmado com sucesso!");
@@ -68,7 +61,6 @@ public class PaymentController {
             return ResponseEntity.ok("Evento processado: " + eventType);
 
         } catch (Exception e) {
-            log.error("❌ Erro ao processar webhook: ", e);
             return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
         }
     }

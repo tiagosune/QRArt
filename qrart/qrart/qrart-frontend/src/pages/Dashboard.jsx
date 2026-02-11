@@ -8,7 +8,7 @@ export default function Dashboard() {
     const [qrcodes, setQrcodes] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const {user, logout} = useAuth();
+    const { user, logout, isAdmin } = useAuth();
 
     useEffect(() => {
         loadQRCodes();
@@ -52,6 +52,15 @@ export default function Dashboard() {
             <span className="text-sm text-slate-300">
               Olá, <strong className="text-white">{user?.name}</strong>
             </span>
+                        {isAdmin && (
+                            <Link
+                                to="/admin/qrcodes"
+                                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition text-sm font-medium"
+                            >
+                                Admin
+                            </Link>
+                        )}
+
                         <button
                             onClick={handleLogout}
                             className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition"
