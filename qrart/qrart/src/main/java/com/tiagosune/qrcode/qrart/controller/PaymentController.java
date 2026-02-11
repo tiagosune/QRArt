@@ -62,8 +62,6 @@ public class PaymentController {
                     stripeWebhookSecret
             );
 
-            log.info("📥 Evento recebido: {}", event.getType());
-
             if ("checkout.session.completed".equals(event.getType())) {
 
                 Session session = (Session) event.getDataObjectDeserializer()
@@ -78,11 +76,9 @@ public class PaymentController {
             return ResponseEntity.ok("Webhook processado com sucesso");
 
         } catch (SignatureVerificationException e) {
-            log.error("❌ Assinatura inválida do Stripe", e);
             return ResponseEntity.status(400).body("Invalid signature");
 
         } catch (Exception e) {
-            log.error("❌ Erro ao processar webhook", e);
             return ResponseEntity.status(500).body("Erro interno");
         }
     }

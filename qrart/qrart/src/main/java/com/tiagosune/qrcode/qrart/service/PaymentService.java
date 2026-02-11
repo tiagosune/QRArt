@@ -81,8 +81,6 @@ public class PaymentService implements InitializingBean {
 
         paymentRepository.save(payment);
 
-        log.info("Checkout criado: sessionId={}, qrCodeId={}", session.getId(), qrCodeId);
-
         return session.getUrl();
     }
 
