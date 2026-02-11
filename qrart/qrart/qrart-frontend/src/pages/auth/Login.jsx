@@ -34,12 +34,14 @@ export default function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (loading) return;
+
         setError("");
         setLoading(true);
 
         try {
             const data = await authService.login(email, password);
-            login(data);
+            await login(data);
             navigate("/dashboard", { replace: true });
         } catch (err) {
             setError(err.response?.data?.message || "Erro ao fazer login");
@@ -103,7 +105,9 @@ export default function Login() {
                         required
                     />
 
-                    <Button loading={loading}>Entrar</Button>
+                    <Button type="submit" loading={loading}>
+                        Entrar
+                    </Button>
                 </form>
 
                 {/* Footer */}
